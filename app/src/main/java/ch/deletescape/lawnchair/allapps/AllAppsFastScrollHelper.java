@@ -16,13 +16,10 @@
 package ch.deletescape.lawnchair.allapps;
 
 import android.support.v7.widget.RecyclerView;
-import android.view.View;
 
 import java.util.HashSet;
 import java.util.List;
 
-import ch.deletescape.lawnchair.BaseRecyclerViewFastScrollBar;
-import ch.deletescape.lawnchair.FastBitmapDrawable;
 import ch.deletescape.lawnchair.util.Thunk;
 
 public class AllAppsFastScrollHelper implements AllAppsGridAdapter.BindViewCallback {
@@ -33,13 +30,11 @@ public class AllAppsFastScrollHelper implements AllAppsGridAdapter.BindViewCallb
     private AllAppsRecyclerView mRv;
     private AlphabeticalAppsList mApps;
 
-    // Keeps track of the current and targetted fast scroll section (the section to scroll to after
+    // Keeps track of the current and targeted fast scroll section (the section to scroll to after
     // the initial delay)
     int mTargetFastScrollPosition = -1;
-    @Thunk
-    String mCurrentFastScrollSection;
-    @Thunk
-    String mTargetFastScrollSection;
+    @Thunk String mCurrentFastScrollSection;
+    @Thunk String mTargetFastScrollSection;
 
     // The settled states affect the delay before the fast scroll animation is applied
     private boolean mHasFastScrollTouchSettled;
@@ -47,21 +42,17 @@ public class AllAppsFastScrollHelper implements AllAppsGridAdapter.BindViewCallb
 
     // Set of all views animated during fast scroll.  We keep track of these ourselves since there
     // is no way to reset a view once it gets scrapped or recycled without other hacks
-    private HashSet<BaseRecyclerViewFastScrollBar.FastScrollFocusableView> mTrackedFastScrollViews =
-            new HashSet<>();
+    private HashSet<RecyclerView.ViewHolder> mTrackedFastScrollViews = new HashSet<>();
 
     // Smooth fast-scroll animation frames
-    @Thunk
-    int mFastScrollFrameIndex;
-    @Thunk
-    final int[] mFastScrollFrames = new int[10];
+    @Thunk int mFastScrollFrameIndex;
+    @Thunk final int[] mFastScrollFrames = new int[10];
 
     /**
      * This runnable runs a single frame of the smooth scroll animation and posts the next frame
      * if necessary.
      */
-    @Thunk
-    Runnable mSmoothSnapNextFrameRunnable = new Runnable() {
+    @Thunk Runnable mSmoothSnapNextFrameRunnable = new Runnable() {
         @Override
         public void run() {
             if (mFastScrollFrameIndex < mFastScrollFrames.length) {
@@ -191,12 +182,7 @@ public class AllAppsFastScrollHelper implements AllAppsGridAdapter.BindViewCallb
     public void onBindView(AllAppsGridAdapter.ViewHolder holder) {
         // Update newly bound views to the current fast scroll state if we are fast scrolling
         if (mCurrentFastScrollSection != null || mTargetFastScrollSection != null) {
-            if (holder.mContent instanceof BaseRecyclerViewFastScrollBar.FastScrollFocusableView) {
-                BaseRecyclerViewFastScrollBar.FastScrollFocusableView v =
-                        (BaseRecyclerViewFastScrollBar.FastScrollFocusableView) holder.mContent;
-                updateViewFastScrollFocusState(v, holder.getLayoutPosition(), false /* animated */);
-                mTrackedFastScrollViews.add(v);
-            }
+            mTrackedFastScrollViews.add(holder);
         }
     }
 
@@ -206,9 +192,9 @@ public class AllAppsFastScrollHelper implements AllAppsGridAdapter.BindViewCallb
     private void trackAllChildViews() {
         int childCount = mRv.getChildCount();
         for (int i = 0; i < childCount; i++) {
-            View v = mRv.getChildAt(i);
-            if (v instanceof BaseRecyclerViewFastScrollBar.FastScrollFocusableView) {
-                mTrackedFastScrollViews.add((BaseRecyclerViewFastScrollBar.FastScrollFocusableView) v);
+            RecyclerView.ViewHolder viewHolder = mRv.getChildViewHolder(mRv.getChildAt(i));
+            if (viewHolder != null) {
+                mTrackedFastScrollViews.add(viewHolder);
             }
         }
     }
@@ -217,27 +203,18 @@ public class AllAppsFastScrollHelper implements AllAppsGridAdapter.BindViewCallb
      * Updates the fast scroll focus on all the children.
      */
     private void updateTrackedViewsFastScrollFocusState() {
-        for (BaseRecyclerViewFastScrollBar.FastScrollFocusableView v : mTrackedFastScrollViews) {
-            RecyclerView.ViewHolder viewHolder = mRv.getChildViewHolder((View) v);
-            int pos = (viewHolder != null) ? viewHolder.getLayoutPosition() : -1;
-            updateViewFastScrollFocusState(v, pos, true);
+        for (RecyclerView.ViewHolder viewHolder : mTrackedFastScrollViews) {
+            int pos = viewHolder.getAdapterPosition();
+            boolean isActive = false;
+            if (mCurrentFastScrollSection != null
+                    && pos > RecyclerView.NO_POSITION
+                    && pos < mApps.getAdapterItems().size()) {
+                AlphabeticalAppsList.AdapterItem item = mApps.getAdapterItems().get(pos);
+                isActive = item != null &&
+                        mCurrentFastScrollSection.equals(item.sectionName) &&
+                        item.position == mTargetFastScrollPosition;
+            }
+            viewHolder.itemView.setActivated(isActive);
         }
-    }
-
-    /**
-     * Updates the fast scroll focus on all a given view.
-     */
-    private void updateViewFastScrollFocusState(BaseRecyclerViewFastScrollBar.FastScrollFocusableView v,
-                                                int pos, boolean animated) {
-        FastBitmapDrawable.State newState = FastBitmapDrawable.State.NORMAL;
-        if (mCurrentFastScrollSection != null && pos > -1) {
-            AlphabeticalAppsList.AdapterItem item = mApps.getAdapterItems().get(pos);
-            boolean highlight = item.sectionName.equals(mCurrentFastScrollSection) &&
-                    item.position == mTargetFastScrollPosition;
-            newState = highlight ?
-                    FastBitmapDrawable.State.FAST_SCROLL_HIGHLIGHTED :
-                    FastBitmapDrawable.State.FAST_SCROLL_UNHIGHLIGHTED;
-        }
-        v.setFastScrollFocusState(newState, animated);
     }
 }

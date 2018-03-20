@@ -2092,7 +2092,7 @@ public class Workspace extends PagedView
                     mLauncher.getDragLayer().performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
                     return null;
                 }
-                dragOptions.preDragCondition = showForIcon.createPreDragCondition(mLauncher.isAllAppsVisible());
+                dragOptions.preDragCondition = showForIcon.createPreDragCondition();
             }
         }
         if (mLauncher.isEditingDisabled())

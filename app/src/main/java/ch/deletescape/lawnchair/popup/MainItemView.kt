@@ -21,10 +21,6 @@ class MainItemView(context: Context, attrs: AttributeSet?, defStyle: Int) : Popu
         itemContainer = findViewById(R.id.popup_items)
     }
 
-    override fun getArrowColor(isArrowAttachedToBottom: Boolean): Int {
-        return Utilities.resolveAttributeData(context, R.attr.popupColorPrimary)
-    }
-
     override fun addView(child: View?) {
         if (child is PopupItemView)
             itemContainer.addView(child)

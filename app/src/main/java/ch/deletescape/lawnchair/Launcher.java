@@ -2827,30 +2827,6 @@ public class Launcher extends Activity
             topOpenView.close(animate);
     }
 
-    public View getTopFloatingView() {
-        View topView = getOpenShortcutsContainer();
-        if (topView == null) {
-            topView = getWorkspace().getOpenFolder();
-        }
-        return topView;
-    }
-
-    /**
-     * @return The open shortcuts container, or null if there is none
-     */
-    public ShortcutsItemView getOpenShortcutsContainer() {
-        // Iterate in reverse order. Shortcuts container is added later to the dragLayer,
-        // and will be one of the last views.
-        for (int i = mDragLayer.getChildCount() - 1; i >= 0; i--) {
-            View child = mDragLayer.getChildAt(i);
-            if (child instanceof ShortcutsItemView
-                    && ((ShortcutsItemView) child).isOpenOrOpening()) {
-                return (ShortcutsItemView) child;
-            }
-        }
-        return null;
-    }
-
     @Override
     public boolean onLongClick(View view) {
         CellLayout.CellInfo cellInfo = null;
@@ -3348,10 +3324,6 @@ public class Launcher extends Activity
 
         // Remove the extra empty screen
         mWorkspace.removeExtraEmptyScreen(false, false);
-
-        if (addedApps != null && mAppsView != null) {
-            mAppsView.addApps(addedApps);
-        }
     }
 
     /**
@@ -3792,10 +3764,6 @@ public class Launcher extends Activity
         };
         if (waitUntilResume(r)) {
             return;
-        }
-
-        if (mAppsView != null) {
-            mAppsView.updateApps(apps);
         }
     }
 

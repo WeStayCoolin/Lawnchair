@@ -73,6 +73,7 @@ import ch.deletescape.lawnchair.badge.FolderBadgeInfo;
 import ch.deletescape.lawnchair.config.FeatureFlags;
 import ch.deletescape.lawnchair.dragndrop.DragLayer;
 import ch.deletescape.lawnchair.dragndrop.DragView;
+import ch.deletescape.lawnchair.graphics.IconPalette;
 import ch.deletescape.lawnchair.util.Thunk;
 
 /**
@@ -807,17 +808,23 @@ public class FolderIcon extends FrameLayout implements FolderListener {
             mBackground.drawBackgroundStroke(canvas, mBgPaint);
         }
 
-        if ((this.mBadgeInfo != null && this.mBadgeInfo.hasBadge()) || this.mBadgeScale > 0.0f) {
-            int save = this.mBackground.getOffsetX();
-            int saveLayer = this.mBackground.getOffsetY();
-            int size = (int) (((float) this.mBackground.previewSize) * this.mBackground.mScale);
-            this.mTempBounds.set(save, saveLayer, save + size, size + saveLayer);
-            float max = Math.max(0.0f, this.mBadgeScale - this.mBackground.getScaleProgress());
-            this.mTempSpaceForBadgeOffset.set(getWidth() - this.mTempBounds.right, this.mTempBounds.top);
-            this.mBadgeRenderer.draw(canvas, this.mBadgeInfo, this.mTempBounds, max, this.mTempSpaceForBadgeOffset);
-        }
+        drawBadge(canvas);
+    }
 
-        canvas.restore();
+    public void drawBadge(Canvas canvas) {
+        if ((mBadgeInfo != null && mBadgeInfo.hasBadge()) || mBadgeScale > 0) {
+            int offsetX = mBackground.getOffsetX();
+            int offsetY = mBackground.getOffsetY();
+            int previewSize = (int) (mBackground.previewSize * mBackground.mScale);
+            mTempBounds.set(offsetX, offsetY, offsetX + previewSize, offsetY + previewSize);
+
+            // If we are animating to the accepting state, animate the badge out.
+            float badgeScale = Math.max(0, mBadgeScale - mBackground.getScaleProgress());
+            mTempSpaceForBadgeOffset.set(getWidth() - mTempBounds.right, mTempBounds.top);
+            IconPalette badgePalette = IconPalette.getFolderBadgePalette(getResources());
+            mBadgeRenderer.draw(canvas, badgePalette, mBadgeInfo, mTempBounds,
+                    badgeScale, mTempSpaceForBadgeOffset);
+        }
     }
 
     private Drawable getTopDrawable(TextView v) {

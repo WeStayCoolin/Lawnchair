@@ -505,7 +505,7 @@ public class DragLayer extends InsettableFrameLayout {
      * Determine the rect of the descendant in this DragLayer's coordinates
      *
      * @param descendant The descendant whose coordinates we want to find.
-     * @param r          The rect into which to place the results.
+     * @param r The rect into which to place the results.
      * @return The factor by which this descendant is scaled relative to this DragLayer.
      */
     public float getDescendantRectRelativeToSelf(View descendant, Rect r) {
@@ -533,13 +533,13 @@ public class DragLayer extends InsettableFrameLayout {
      * Given a coordinate relative to the descendant, find the coordinate in this DragLayer's
      * coordinates.
      *
-     * @param descendant        The descendant to which the passed coordinate is relative.
-     * @param coord             The coordinate that we want mapped.
+     * @param descendant The descendant to which the passed coordinate is relative.
+     * @param coord The coordinate that we want mapped.
      * @param includeRootScroll Whether or not to account for the scroll of the root descendant:
-     *                          sometimes this is relevant as in a child's coordinates within the root descendant.
+     *          sometimes this is relevant as in a child's coordinates within the root descendant.
      * @return The factor by which this descendant is scaled relative to this DragLayer. Caution
-     * this scale factor is assumed to be equal in X and Y, and so if at any point this
-     * assumption fails, we will need to return a pair of scale factors.
+     *         this scale factor is assumed to be equal in X and Y, and so if at any point this
+     *         assumption fails, we will need to return a pair of scale factors.
      */
     public float getDescendantCoordRelativeToSelf(View descendant, int[] coord,
                                                   boolean includeRootScroll) {
@@ -550,8 +550,8 @@ public class DragLayer extends InsettableFrameLayout {
     /**
      * Inverse of {@link #getDescendantCoordRelativeToSelf(View, int[])}.
      */
-    public float mapCoordInSelfToDescendent(View descendant, int[] coord) {
-        return Utilities.mapCoordInSelfToDescendent(descendant, this, coord);
+    public void mapCoordInSelfToDescendent(View descendant, int[] coord) {
+        Utilities.mapCoordInSelfToDescendant(descendant, this, coord);
     }
 
     public void getViewRectRelativeToSelf(View v, Rect r) {

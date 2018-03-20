@@ -23,28 +23,32 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.RippleDrawable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewPropertyAnimator;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import ch.deletescape.lawnchair.ItemInfo;
 import ch.deletescape.lawnchair.Launcher;
 import ch.deletescape.lawnchair.R;
+import ch.deletescape.lawnchair.touch.OverScroll;
+import ch.deletescape.lawnchair.touch.SwipeDetector;
 import ch.deletescape.lawnchair.util.Themes;
 
 /**
  * A {@link android.widget.FrameLayout} that contains a single notification,
  * e.g. icon + title + text.
  */
-public class NotificationMainView extends FrameLayout implements SwipeHelper.Callback {
+public class NotificationMainView extends FrameLayout implements SwipeDetector.Listener {
 
     private NotificationInfo mNotificationInfo;
     private ViewGroup mTextAndBackground;
     private int mBackgroundColor;
     private TextView mTitleView;
     private TextView mTextView;
+
+    private SwipeDetector mSwipeDetector;
 
     public NotificationMainView(Context context) {
         this(context, null, 0);
@@ -62,19 +66,23 @@ public class NotificationMainView extends FrameLayout implements SwipeHelper.Cal
     protected void onFinishInflate() {
         super.onFinishInflate();
 
-        mTextAndBackground = findViewById(R.id.text_and_background);
+        mTextAndBackground = (ViewGroup) findViewById(R.id.text_and_background);
         ColorDrawable colorBackground = (ColorDrawable) mTextAndBackground.getBackground();
         mBackgroundColor = colorBackground.getColor();
         RippleDrawable rippleBackground = new RippleDrawable(ColorStateList.valueOf(
                 Themes.getAttrColor(getContext(), android.R.attr.colorControlHighlight)),
                 colorBackground, null);
         mTextAndBackground.setBackground(rippleBackground);
-        mTitleView = mTextAndBackground.findViewById(R.id.title);
-        mTextView = mTextAndBackground.findViewById(R.id.text);
+        mTitleView = (TextView) mTextAndBackground.findViewById(R.id.title);
+        mTextView = (TextView) mTextAndBackground.findViewById(R.id.text);
     }
 
     public void applyNotificationInfo(NotificationInfo mainNotification, View iconView) {
         applyNotificationInfo(mainNotification, iconView, false);
+    }
+
+    public void setSwipeDetector(SwipeDetector swipeDetector) {
+        mSwipeDetector = swipeDetector;
     }
 
     /**
@@ -86,11 +94,11 @@ public class NotificationMainView extends FrameLayout implements SwipeHelper.Cal
         CharSequence title = mNotificationInfo.title;
         CharSequence text = mNotificationInfo.text;
         if (!TextUtils.isEmpty(title) && !TextUtils.isEmpty(text)) {
-            mTitleView.setText(title);
-            mTextView.setText(text);
+            mTitleView.setText(title.toString());
+            mTextView.setText(text.toString());
         } else {
             mTitleView.setMaxLines(2);
-            mTitleView.setText(TextUtils.isEmpty(title) ? text : title);
+            mTitleView.setText(TextUtils.isEmpty(title) ? text.toString() : title.toString());
             mTextView.setVisibility(GONE);
         }
         iconView.setBackground(mNotificationInfo.getIconForBackground(getContext(),
@@ -112,50 +120,65 @@ public class NotificationMainView extends FrameLayout implements SwipeHelper.Cal
     }
 
 
-    // SwipeHelper.Callback's
-
-    @Override
-    public View getChildAtPosition(MotionEvent ev) {
-        return this;
-    }
-
-    @Override
-    public boolean canChildBeDismissed(View v) {
+    public boolean canChildBeDismissed() {
         return mNotificationInfo != null && mNotificationInfo.dismissable;
     }
 
-    @Override
-    public boolean isAntiFalsingNeeded() {
-        return false;
-    }
-
-    @Override
-    public void onBeginDrag(View v) {
-    }
-
-    @Override
-    public void onChildDismissed(View v) {
+    public void onChildDismissed() {
         Launcher launcher = Launcher.getLauncher(getContext());
         launcher.getPopupDataProvider().cancelNotification(
                 mNotificationInfo.notificationKey);
     }
 
+    // SwipeDetector.Listener's
     @Override
-    public void onDragCancelled(View v) {
-    }
+    public void onDragStart(boolean start) { }
+
 
     @Override
-    public void onChildSnappedBack(View animView, float targetLeft) {
-    }
-
-    @Override
-    public boolean updateSwipeProgress(View animView, boolean dismissable, float swipeProgress) {
-        // Don't fade out.
+    public boolean onDrag(float displacement, float velocity) {
+        setTranslationX(canChildBeDismissed()
+                ? displacement : OverScroll.dampedScroll(displacement, getWidth()));
+        animate().cancel();
         return true;
     }
 
     @Override
-    public float getFalsingThresholdFactor() {
-        return 1;
+    public void onDragEnd(float velocity, boolean fling) {
+        final boolean willExit;
+        final float endTranslation;
+
+        if (!canChildBeDismissed()) {
+            willExit = false;
+            endTranslation = 0;
+        } else if (fling) {
+            willExit = true;
+            endTranslation = velocity < 0 ? - getWidth() : getWidth();
+        } else if (Math.abs(getTranslationX()) > getWidth() / 2) {
+            willExit = true;
+            endTranslation = (getTranslationX() < 0 ? -getWidth() : getWidth());
+        } else {
+            willExit = false;
+            endTranslation = 0;
+        }
+
+        SwipeDetector.ScrollInterpolator interpolator = new SwipeDetector.ScrollInterpolator();
+        interpolator.setVelocityAtZero(velocity);
+
+        long duration = SwipeDetector.calculateDuration(velocity,
+                (endTranslation - getTranslationX()) / getWidth());
+        animate()
+                .setDuration(duration)
+                .setInterpolator(interpolator)
+                .translationX(endTranslation)
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        mSwipeDetector.finishedScrolling();
+                        if (willExit) {
+                            onChildDismissed();
+                        }
+                    }
+                }).start();
     }
 }

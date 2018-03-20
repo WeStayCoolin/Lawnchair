@@ -153,6 +153,7 @@
     <attr name="roundSearchBarHintColor" format="color" />
     <attr name="roundSearchBarTextColor" format="color" />
     <attr name="searchBarTextColor" format="color" />
+    <attr name="isMainColorDark" format="boolean" />
 
     <!-- SnowfallView snowflake attributes -->
     <declare-styleable name="SnowfallView">
@@ -167,6 +168,10 @@
         <attr name="snowflakeImage" format="reference"/>
         <attr name="snowflakesFadingEnabled" format="boolean"/>
         <attr name="snowflakesAlreadyFalling" format="boolean"/>
+    </declare-styleable>
+
+    <declare-styleable name="RecyclerViewFastScroller">
+        <attr name="canThumbDetach" format="boolean" />
     </declare-styleable>
 
 </resources>

@@ -137,7 +137,7 @@ class ClockIconDrawable(val context: Context, val adaptive: Boolean) : Drawable(
         }
     }
 
-    class Wrapper(val drawable: Drawable, val adaptive: Boolean) : FastBitmapDrawable(), Callback {
+    class Wrapper(val drawable: Drawable, val adaptive: Boolean) : FastBitmapDrawable(null), Callback {
         val canvas = Canvas()
         val clearPaint = Paint()
         var shadow: Drawable? = null
@@ -159,7 +159,7 @@ class ClockIconDrawable(val context: Context, val adaptive: Boolean) : Drawable(
         override fun onBoundsChange(bounds: Rect) {
             val width = bounds.right - bounds.left
             val height = bounds.bottom - bounds.top
-            bitmap = Bitmap.createBitmap(width, height,
+            mBitmap = Bitmap.createBitmap(width, height,
                     Bitmap.Config.ARGB_8888)
             canvas.setBitmap(bitmap)
             if (adaptive) {

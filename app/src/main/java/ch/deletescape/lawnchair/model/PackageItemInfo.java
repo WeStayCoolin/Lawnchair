@@ -16,27 +16,15 @@
 
 package ch.deletescape.lawnchair.model;
 
-import android.graphics.Bitmap;
-
-import ch.deletescape.lawnchair.ItemInfo;
+import ch.deletescape.lawnchair.ItemInfoWithIcon;
 
 /**
  * Represents a {@link Package} in the widget tray section.
  */
-public class PackageItemInfo extends ItemInfo {
+public class PackageItemInfo extends ItemInfoWithIcon {
 
     /**
-     * A bitmap version of the application icon.
-     */
-    public Bitmap iconBitmap;
-
-    /**
-     * Indicates whether we're using a low res icon.
-     */
-    public boolean usingLowResIcon;
-
-    /**
-     * Package name of the {@link ItemInfo}.
+     * Package name of the {@link PackageItemInfo}.
      */
     public String packageName;
 

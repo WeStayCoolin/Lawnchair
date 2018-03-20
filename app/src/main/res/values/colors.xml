@@ -81,6 +81,7 @@
     <color name="notification_icon_default_color">#ff757575</color>
     <color name="notification_color_beneath">#ffe0e0e0</color>
     <color name="badge_color">#fff</color>
+    <color name="folder_badge_color">#FFFFFF</color>
     <color name="blue_grey_100">#ffcfd8dc</color>
     <color name="search_bar_text_color">#4c4c4c</color>
     <color name="date_widget_text_color">#ffffffff</color>
@@ -115,4 +116,7 @@
     <color name="color_navigationbar_settings">#ff000000</color>
     <color name="color_navigationbar_settings_dark">#ff000000</color>
     <color name="color_navigationbar_settings_black">#ff000000</color>
+
+    <color name="all_apps_bg_hand_fill">#E5E5E5</color>
+    <color name="all_apps_bg_hand_fill_dark">#9AA0A6</color>
 </resources>

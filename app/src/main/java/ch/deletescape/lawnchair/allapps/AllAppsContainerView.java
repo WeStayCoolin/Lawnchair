@@ -63,19 +63,6 @@ import ch.deletescape.lawnchair.keyboard.FocusedItemDecorator;
 import ch.deletescape.lawnchair.util.ComponentKey;
 import ch.deletescape.lawnchair.util.PackageUserKey;
 
-
-/**
- * A merge algorithm that merges every section indiscriminately.
- */
-final class FullMergeAlgorithm implements AlphabeticalAppsList.MergeAlgorithm {
-
-    @Override
-    public boolean continueMerging(AlphabeticalAppsList.SectionInfo section) {
-        // Only merge apps
-        return section.firstAppItem.viewType == AllAppsGridAdapter.VIEW_TYPE_ICON;
-    }
-}
-
 /**
  * The all apps view container.
  */
@@ -152,22 +139,6 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
     }
 
     /**
-     * Adds new apps to the list.
-     */
-    public void addApps(List<AppInfo> apps) {
-        mApps.addApps(apps);
-        mSearchBarController.refreshSearchResult();
-    }
-
-    /**
-     * Updates existing apps in the list
-     */
-    public void updateApps(List<AppInfo> apps) {
-        mApps.updateApps(apps);
-        mSearchBarController.refreshSearchResult();
-    }
-
-    /**
      * Removes some apps from the list.
      */
     public void removeApps(List<AppInfo> apps) {
@@ -206,31 +177,30 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
      * Returns whether the view itself will handle the touch event or not.
      */
     public boolean shouldContainerScroll(MotionEvent ev) {
-        int[] point = new int[2];
-        point[0] = (int) ev.getX();
-        point[1] = (int) ev.getY();
-        Utilities.mapCoordInSelfToDescendent(mAppsRecyclerView, this, point);
-
         // IF the MotionEvent is inside the search box, and the container keeps on receiving
         // touch input, container should move down.
         if (mLauncher.getDragLayer().isEventOverView(mSearchContainer, ev)) {
             return true;
         }
 
+        int[] point = new int[2];
+        point[0] = (int) ev.getX();
+        point[1] = (int) ev.getY();
+        Utilities.mapCoordInSelfToDescendant(
+                mAppsRecyclerView.getScrollBar(), mLauncher.getDragLayer(), point);
         // IF the MotionEvent is inside the thumb, container should not be pulled down.
-        if (mAppsRecyclerView.getScrollBar().isNearThumb(point[0], point[1])) {
-            return false;
-        }
-
-        // IF a shortcuts container is open, container should not be pulled down.
-        if (mLauncher.getOpenShortcutsContainer() != null) {
+        if (mAppsRecyclerView.getScrollBar().shouldBlockIntercept(point[0], point[1])) {
             return false;
         }
 
         // IF scroller is at the very top OR there is no scroll bar because there is probably not
         // enough items to scroll, THEN it's okay for the container to be pulled down.
-        return mAppsRecyclerView.getScrollBar().getThumbOffset().y <= 0;
+        if (mAppsRecyclerView.getCurrentScrollY() == 0) {
+            return true;
+        }
+        return false;
     }
+
 
     /**
      * Focuses the search field and begins an app search.
@@ -250,7 +220,7 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
             scrollToTop();
         }
         mSearchBarController.reset();
-        mAppsRecyclerView.reset();
+        //mAppsRecyclerView.reset();
     }
 
     @Override
@@ -303,7 +273,7 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
         if (!mUseRoundSearchBar) {
             mElevationController = new HeaderElevationController.ControllerVL(mSearchContainer);
             mAppsRecyclerView.addOnScrollListener(mElevationController);
-            mAppsRecyclerView.setElevationController(mElevationController);
+            //mAppsRecyclerView.setElevationController(mElevationController);
         }
 
         FocusedItemDecorator focusedItemDecorator = new FocusedItemDecorator(mAppsRecyclerView);
@@ -334,7 +304,7 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
 
             mAppsRecyclerView.setNumAppsPerRow(grid, numAppsPerRow);
             mAdapter.setNumAppsPerRow(numAppsPerRow);
-            mApps.setNumAppsPerRow(numAppsPerRow, new FullMergeAlgorithm());
+            mApps.setNumAppsPerRow(numAppsPerRow);
             if (numAppsPerRow > 0) {
                 int rvPadding = mAppsRecyclerView.getPaddingStart(); // Assumes symmetry
                 final int thumbMaxWidth =
@@ -359,12 +329,12 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
         Rect bgPadding = new Rect();
         getRevealView().getBackground().getPadding(bgPadding);
 
-        mAppsRecyclerView.updateBackgroundPadding(bgPadding);
+        //mAppsRecyclerView.updateBackgroundPadding(bgPadding);
         mAdapter.updateBackgroundPadding(bgPadding);
 
         // Pad the recycler view by the background padding plus the start margin (for the section
         // names)
-        int maxScrollBarWidth = mAppsRecyclerView.getMaxScrollbarWidth();
+        /*int maxScrollBarWidth = mAppsRecyclerView.getMaxScrollbarWidth();
         int startInset = Math.max(mSectionNamesMargin, maxScrollBarWidth);
         if (Utilities.isRtl(getResources())) {
             mAppsRecyclerView.setPadding(bgPadding.left + maxScrollBarWidth, 0, bgPadding.right
@@ -372,7 +342,10 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
         } else {
             mAppsRecyclerView.setPadding(bgPadding.left + startInset, 0, bgPadding.right +
                     maxScrollBarWidth, mRecyclerViewBottomPadding);
-        }
+        }*/
+        mAppsRecyclerView.setPadding(
+                mAppsRecyclerView.getPaddingLeft(), mAppsRecyclerView.getPaddingTop(),
+                mAppsRecyclerView.getPaddingRight(), mAppsRecyclerView.getPaddingBottom());
 
         MarginLayoutParams lp = (MarginLayoutParams) mSearchContainer.getLayoutParams();
         lp.leftMargin = bgPadding.left;

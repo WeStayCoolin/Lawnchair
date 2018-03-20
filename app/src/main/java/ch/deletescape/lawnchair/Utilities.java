@@ -122,6 +122,10 @@ public final class Utilities {
     private static final Pattern sTrimPattern =
             Pattern.compile("^[\\s|\\p{javaSpaceChar}]*(.*)[\\s|\\p{javaSpaceChar}]*$");
 
+    private static final float[] sPoint = new float[2];
+    private static final Matrix sMatrix = new Matrix();
+    private static final Matrix sInverseMatrix = new Matrix();
+
     static {
         sCanvas.setDrawFilter(new PaintFlagsDrawFilter(Paint.DITHER_FLAG,
                 Paint.FILTER_BITMAP_FLAG));
@@ -368,79 +372,63 @@ public final class Utilities {
      * Given a coordinate relative to the descendant, find the coordinate in a parent view's
      * coordinates.
      *
-     * @param descendant        The descendant to which the passed coordinate is relative.
-     * @param ancestor          The root view to make the coordinates relative to.
-     * @param coord             The coordinate that we want mapped.
+     * @param descendant The descendant to which the passed coordinate is relative.
+     * @param ancestor The root view to make the coordinates relative to.
+     * @param coord The coordinate that we want mapped.
      * @param includeRootScroll Whether or not to account for the scroll of the descendant:
-     *                          sometimes this is relevant as in a child's coordinates within the descendant.
+     *          sometimes this is relevant as in a child's coordinates within the descendant.
      * @return The factor by which this descendant is scaled relative to this DragLayer. Caution
-     * this scale factor is assumed to be equal in X and Y, and so if at any point this
-     * assumption fails, we will need to return a pair of scale factors.
+     *         this scale factor is assumed to be equal in X and Y, and so if at any point this
+     *         assumption fails, we will need to return a pair of scale factors.
      */
     public static float getDescendantCoordRelativeToAncestor(
             View descendant, View ancestor, int[] coord, boolean includeRootScroll) {
-        float[] pt = {coord[0], coord[1]};
+        sPoint[0] = coord[0];
+        sPoint[1] = coord[1];
+
         float scale = 1.0f;
         View v = descendant;
-        while (v != ancestor && v != null) {
+        while(v != ancestor && v != null) {
             // For TextViews, scroll has a meaning which relates to the text position
             // which is very strange... ignore the scroll.
             if (v != descendant || includeRootScroll) {
-                pt[0] -= v.getScrollX();
-                pt[1] -= v.getScrollY();
+                sPoint[0] -= v.getScrollX();
+                sPoint[1] -= v.getScrollY();
             }
 
-            v.getMatrix().mapPoints(pt);
-            pt[0] += v.getLeft();
-            pt[1] += v.getTop();
+            v.getMatrix().mapPoints(sPoint);
+            sPoint[0] += v.getLeft();
+            sPoint[1] += v.getTop();
             scale *= v.getScaleX();
 
             v = (View) v.getParent();
         }
 
-        coord[0] = Math.round(pt[0]);
-        coord[1] = Math.round(pt[1]);
+        coord[0] = Math.round(sPoint[0]);
+        coord[1] = Math.round(sPoint[1]);
         return scale;
     }
 
     /**
      * Inverse of {@link #getDescendantCoordRelativeToAncestor(View, View, int[], boolean)}.
      */
-    public static float mapCoordInSelfToDescendent(View descendant, View root,
-                                                   int[] coord) {
-        ArrayList<View> ancestorChain = new ArrayList<>();
-
-        float[] pt = {coord[0], coord[1]};
-
+    public static void mapCoordInSelfToDescendant(View descendant, View root, int[] coord) {
+        sMatrix.reset();
         View v = descendant;
-        while (v != root) {
-            ancestorChain.add(v);
+        while(v != root) {
+            sMatrix.postTranslate(-v.getScrollX(), -v.getScrollY());
+            sMatrix.postConcat(v.getMatrix());
+            sMatrix.postTranslate(v.getLeft(), v.getTop());
             v = (View) v.getParent();
         }
-        ancestorChain.add(root);
+        sMatrix.postTranslate(-v.getScrollX(), -v.getScrollY());
+        sMatrix.invert(sInverseMatrix);
 
-        float scale = 1.0f;
-        Matrix inverse = new Matrix();
-        int count = ancestorChain.size();
-        for (int i = count - 1; i >= 0; i--) {
-            View ancestor = ancestorChain.get(i);
-            View next = i > 0 ? ancestorChain.get(i - 1) : null;
-
-            pt[0] += ancestor.getScrollX();
-            pt[1] += ancestor.getScrollY();
-
-            if (next != null) {
-                pt[0] -= next.getLeft();
-                pt[1] -= next.getTop();
-                next.getMatrix().invert(inverse);
-                inverse.mapPoints(pt);
-                scale *= next.getScaleX();
-            }
-        }
-
-        coord[0] = Math.round(pt[0]);
-        coord[1] = Math.round(pt[1]);
-        return scale;
+        sPoint[0] = coord[0];
+        sPoint[1] = coord[1];
+        sInverseMatrix.mapPoints(sPoint);
+        coord[0] = Math.round(sPoint[0]);
+        coord[1] = Math.round(sPoint[1]);
     }
 
     /**

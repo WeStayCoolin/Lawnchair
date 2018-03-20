@@ -2,18 +2,6 @@
   *;
 }
 
--keep class ch.deletescape.lawnchair.BaseRecyclerViewFastScrollBar {
-  public void setThumbWidth(int);
-  public int getThumbWidth();
-  public void setTrackWidth(int);
-  public int getTrackWidth();
-}
-
--keep class ch.deletescape.lawnchair.BaseRecyclerViewFastScrollPopup {
-  public void setAlpha(float);
-  public float getAlpha();
-}
-
 -keep class ch.deletescape.lawnchair.ButtonDropTarget {
   public int getTextColor();
 }

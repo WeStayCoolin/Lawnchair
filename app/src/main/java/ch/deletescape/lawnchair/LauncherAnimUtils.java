@@ -21,6 +21,7 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
+import android.graphics.drawable.Drawable;
 import android.util.Property;
 import android.view.View;
 
@@ -101,4 +102,17 @@ public class LauncherAnimUtils {
         new FirstFrameAnimatorHelper(anim, view);
         return anim;
     }
+
+    public static final Property<Drawable, Integer> DRAWABLE_ALPHA =
+            new Property<Drawable, Integer>(Integer.TYPE, "drawableAlpha") {
+                @Override
+                public Integer get(Drawable drawable) {
+                    return drawable.getAlpha();
+                }
+
+                @Override
+                public void set(Drawable drawable, Integer alpha) {
+                    drawable.setAlpha(alpha);
+                }
+            };
 }

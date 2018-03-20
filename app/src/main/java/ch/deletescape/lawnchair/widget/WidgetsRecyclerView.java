@@ -30,11 +30,6 @@ public class WidgetsRecyclerView extends BaseRecyclerView {
     }
 
     @Override
-    public int getFastScrollerTrackColor(int i) {
-        return -1;
-    }
-
-    @Override
     public void setAdapter(Adapter c0280q) {
         super.setAdapter(c0280q);
         this.mAdapter = (WidgetsListAdapter) c0280q;

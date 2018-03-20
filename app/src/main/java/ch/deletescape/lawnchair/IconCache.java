@@ -407,7 +407,7 @@ public class IconCache {
      *
      * @return a request ID that can be used to cancel the request.
      */
-    public IconLoadRequest updateIconInBackground(final BubbleTextView caller, final ItemInfo info) {
+    public IconLoadRequest updateIconInBackground(final BubbleTextView caller, final ItemInfoWithIcon info) {
         Runnable request = new Runnable() {
 
             @Override

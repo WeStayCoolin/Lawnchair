@@ -14,7 +14,7 @@ import ch.deletescape.lawnchair.shortcuts.ShortcutDragPreviewProvider
 import java.lang.ref.WeakReference
 
 class AllAppsIconRowView(context: Context, attrs: AttributeSet) :
-        LinearLayout(context, attrs), BaseRecyclerViewFastScrollBar.FastScrollFocusableView, View.OnTouchListener {
+        LinearLayout(context, attrs), View.OnTouchListener {
 
     lateinit var icon: BubbleTextView
     lateinit var title: TextView
@@ -52,10 +52,6 @@ class AllAppsIconRowView(context: Context, attrs: AttributeSet) :
         super.onFinishInflate()
         icon = findViewById(android.R.id.icon)
         title = findViewById(android.R.id.title)
-    }
-
-    override fun setFastScrollFocusState(focusState: FastBitmapDrawable.State?, animated: Boolean) {
-        icon.setFastScrollFocusState(focusState, animated)
     }
 
     fun applyFromApplicationInfo(appInfo: AppInfo) {
